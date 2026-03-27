@@ -7,7 +7,7 @@ st.write("Rewrite AI text into structured academic style")
 
 @st.cache_resource
 def load_model():
-    return pipeline("text2text-generation", model="google/flan-t5-large")
+    return pipeline("text2text-generation", model="google/flan-t5-base")
 
 generator = load_model()
 
@@ -25,7 +25,7 @@ Rules:
 Text:
 {text}
 """
-    result = generator(prompt, max_length=1024, do_sample=False)
+    result = generator(prompt, max_length=512, do_sample=False)
     return result[0]['generated_text']
 
 input_text = st.text_area("Paste your text (up to ~800–1000 words)", height=250)
