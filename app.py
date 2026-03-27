@@ -1,5 +1,5 @@
 import streamlit as st
-from transformers import pipeline
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
 st.title("Sourav Academic Rewrite Engine")
 
@@ -7,9 +7,12 @@ st.write("Rewrite AI text into structured academic style")
 
 @st.cache_resource
 def load_model():
-    return pipeline("text2text-generation", model="google/flan-t5-base")
+    model_name = "google/flan-t5-base"
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+    return tokenizer, model
 
-generator = load_model()
+tokenizer, model = load_model()
 
 def rewrite(text):
     prompt = f"""
@@ -25,10 +28,19 @@ Rules:
 Text:
 {text}
 """
-    result = generator(prompt, max_length=512, do_sample=False)
-    return result[0]['generated_text']
 
-input_text = st.text_area("Paste your text (up to ~800–1000 words)", height=250)
+    inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=512)
+
+    outputs = model.generate(
+        **inputs,
+        max_new_tokens=512,
+        num_beams=4,
+        early_stopping=True
+    )
+
+    return tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+input_text = st.text_area("Paste your text (up to ~800 words)", height=250)
 
 if st.button("Rewrite"):
     if input_text.strip() == "":
